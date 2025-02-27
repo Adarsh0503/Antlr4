@@ -1,24 +1,23 @@
-/*
-MariaDB grammar
+/* MariaDB grammar
 The MIT License (MIT).
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
+Permission is heareby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 // $antlr-format alignTrailingComments true, columnLimit 150, maxEmptyLinesToKeep 1, reflowComments false, useTab false
@@ -37,13 +36,10 @@ channels {
 }
 
 // SKIP
-
-SPACE              : [ \t\r\n]+     -> channel(HIDDEN);
+SPACE              : [ \t\r\n]+    -> channel(HIDDEN);
 SPEC_MYSQL_COMMENT : '/*!' .+? '*/' -> channel(MYSQLCOMMENT);
 COMMENT_INPUT      : '/*' .*? '*/'  -> channel(HIDDEN);
-LINE_COMMENT:
-    (('--' [ \t]* | '#') ~[\r\n]* ('\r'? '\n' | EOF) | '--' ('\r'? '\n' | EOF)) -> channel(HIDDEN)
-;
+LINE_COMMENT:     (('--' [ \t]* | '#') ~[\r\n]* ('\r'? '\n' | EOF) | '--' ('\r'? '\n' | EOF)) -> channel(HIDDEN) ;
 
 // Keywords
 // Common Keywords
@@ -704,7 +700,6 @@ STATS_AUTO_RECALC           : 'STATS_AUTO_RECALC';
 STATS_PERSISTENT            : 'STATS_PERSISTENT';
 STATS_SAMPLE_PAGES          : 'STATS_SAMPLE_PAGES';
 STATUS                      : 'STATUS';
-STOP                        : 'STOP';
 STORAGE                     : 'STORAGE';
 STORED                      : 'STORED';
 STRING                      : 'STRING';
@@ -1278,6 +1273,10 @@ DOUBLE_QUOTE_SYMB  : '"';
 REVERSE_QUOTE_SYMB : '`';
 COLON_SYMB         : ':';
 
+// Added missing token definitions
+DOLLAR_SIGN        : '$';
+ANY_CHAR           : .;
+
 fragment QUOTE_SYMB: SINGLE_QUOTE_SYMB | DOUBLE_QUOTE_SYMB | REVERSE_QUOTE_SYMB;
 
 // Charsets
@@ -1299,8 +1298,7 @@ REAL_LITERAL:
     (DEC_DIGIT+)? '.' DEC_DIGIT+
     | DEC_DIGIT+ '.' EXPONENT_NUM_PART
     | (DEC_DIGIT+)? '.' (DEC_DIGIT+ EXPONENT_NUM_PART)
-    | DEC_DIGIT+ EXPONENT_NUM_PART
-;
+    | DEC_DIGIT+ EXPONENT_NUM_PART;
 NULL_SPEC_LITERAL   : '\\' 'N';
 BIT_STRING          : BIT_STRING_L;
 STRING_CHARSET_NAME : '_' CHARSET_NAME;
@@ -1363,8 +1361,7 @@ fragment CHARSET_NAME:
     | UTF32
     | UTF8
     | UTF8MB3
-    | UTF8MB4
-;
+    | UTF8MB4;
 
 fragment EXPONENT_NUM_PART : 'E' [-+]? DEC_DIGIT+;
 fragment ID_LITERAL        : [A-Z_$0-9\u0080-\uFFFF]*? [A-Z_$\u0080-\uFFFF]+? [A-Z_$0-9\u0080-\uFFFF]*;
