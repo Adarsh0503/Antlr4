@@ -1,24 +1,20 @@
 /* MariaDB grammar
 The MIT License (MIT).
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+SOFTWARE.*/
 
 // $antlr-format alignTrailingComments true, columnLimit 150, minEmptyLines 1, maxEmptyLinesToKeep 1, reflowComments false, useTab false
 // $antlr-format allowShortRulesOnASingleLine false, allowShortBlocksOnASingleLine true, alignSemicolons hanging, alignColons hanging
@@ -30,14 +26,13 @@ options {
 }
 
 // Top Level Description
-
 root
     : sqlStatements? (MINUS MINUS)? EOF
     ;
 
 sqlStatements
-    : (sqlStatement (MINUS MINUS)? SEMI? | emptyStatement_)* (
-        sqlStatement ((MINUS MINUS)? SEMI)?
+    : (sqlStatement (MINUS MINUS)? SEMI | emptyStatement_)* (
+        sqlStatement ((MINUS MINUS)? SEMI)
         | emptyStatement_
     )
     ;
@@ -133,19 +128,20 @@ transactionStatement
     | unlockTables
     ;
 
+// Modified to handle custom delimiters properly
 delimiterStatement
     : DELIMITER delimiterIdentifier
     ;
 
-
+// Support for various delimiter formats
 delimiterIdentifier
     : STRING_LITERAL
     | ID
     | (DIVIDE DIVIDE)  // For //
+    | (SEMI)  // Explicitly add semicolon as a valid delimiter
     | (DOLLAR_SIGN DOLLAR_SIGN)  // For $$
     | ANY_CHAR+  // For other characters
     ;
-
 
 replicationStatement
     : changeMaster
@@ -175,13 +171,13 @@ preparedStatement
 //  of routine's statements
 compoundStatement
     : DELIMITER delimiterIdentifier
-          (uid ':')? BEGIN
-              procedureSqlStatement*
-          END uid?
-          DELIMITER SEMI
-        | (uid ':')? BEGIN
-              procedureSqlStatement*
-          END uid?
+      (uid ':')? BEGIN
+          procedureSqlStatement*
+      END uid?
+      DELIMITER SEMI
+    | (uid ':')? BEGIN
+          procedureSqlStatement*
+      END uid?
     | blockStatement
     | caseStatement
     | ifStatement
@@ -236,7 +232,6 @@ utilityStatement
 
 // Data Definition Language
 //    Create statements
-
 createDatabase
     : CREATE dbFormat = (DATABASE | SCHEMA) ifNotExists? uid createDatabaseOption* // here ifNotExists is MariaDB-specific only
     ;
@@ -381,7 +376,6 @@ sequenceSpec
     ;
 
 // details
-
 createDatabaseOption
     : DEFAULT? charSet '='? (charsetName | DEFAULT)
     | DEFAULT? COLLATE '='? collationName
@@ -679,7 +673,6 @@ partitionOption
     ;
 
 //    Alter statements
-
 alterDatabase
     : ALTER dbFormat = (DATABASE | SCHEMA) uid? createDatabaseOption+      # alterSimpleDatabase
     | ALTER dbFormat = (DATABASE | SCHEMA) uid UPGRADE DATA DIRECTORY NAME # alterUpgradeName
@@ -735,7 +728,6 @@ alterSequence // sequence is MariaDB-specific only
     ;
 
 // details
-
 alterSpecification
     : tableOption (','? tableOption)*                                    # alterByTableOption
     | ADD COLUMN? ifNotExists? uid columnDefinition (FIRST | AFTER uid)? # alterByAddColumn // here ifNotExists is MariaDB-specific only
@@ -799,7 +791,6 @@ alterPartitionSpecification
     ;
 
 //    Drop statements
-
 dropDatabase
     : DROP dbFormat = (DATABASE | SCHEMA) ifExists? uid
     ;
@@ -864,7 +855,6 @@ dropSequence // sequence is MariaDB-specific only
     ;
 
 //    Other DDL statements
-
 renameTable
     : RENAME TABLE ifExists? renameTableClause (',' renameTableClause)*
     ;
@@ -879,7 +869,6 @@ truncateTable
 
 // Data Manipulation Language
 //    Primary DML Statements
-
 callStatement
     : CALL fullId ('(' (constants | expressions)? ')')?
     ;
@@ -965,7 +954,6 @@ valuesStatement
     ;
 
 // details
-
 insertStatementValue
     : selectStatement
     | insertFormat = (VALUES | VALUE) '(' expressionsWithDefaults? ')' (
@@ -987,7 +975,6 @@ lockClause
     ;
 
 //    Detailed DML Statements
-
 singleDeleteStatement
     : DELETE priority = LOW_PRIORITY? QUICK? IGNORE? FROM tableName (PARTITION '(' uidList ')')? (
         WHERE expression
@@ -1033,7 +1020,6 @@ multipleUpdateStatement
     ;
 
 // details
-
 orderByClause
     : ORDER BY orderByExpression (',' orderByExpression)*
     ;
@@ -1076,7 +1062,6 @@ joinPart
     ;
 
 //    Select Statement's Details
-
 queryExpression
     : '(' querySpecification ')'
     | '(' queryExpression ')'
@@ -1139,7 +1124,6 @@ jsonOnError
     ;
 
 // details
-
 selectSpec
     : (ALL | DISTINCT | DISTINCTROW)
     | HIGH_PRIORITY
@@ -1217,7 +1201,6 @@ limitClauseAtom
     ;
 
 // Transaction's Statements
-
 startTransaction
     : START TRANSACTION (transactionMode (',' transactionMode)*)?
     ;
@@ -1255,7 +1238,6 @@ unlockTables
     ;
 
 // details
-
 setAutocommitStatement
     : SET AUTOCOMMIT '=' autocommitValue = ('0' | '1')
     ;
@@ -1296,7 +1278,6 @@ transactionLevel
 
 // Replication's Statements
 //    Base Replication
-
 changeMaster
     : CHANGE MASTER TO masterOption (',' masterOption)* channelOption?
     ;
@@ -1337,7 +1318,6 @@ stopGroupReplication
     ;
 
 // details
-
 masterOption
     : stringMasterOption '=' STRING_LITERAL           # masterStringOption
     | decimalMasterOption '=' decimalLiteral          # masterDecimalOption
@@ -1421,7 +1401,6 @@ gtuidSet
     ;
 
 //    XA Transactions
-
 xaStartTransaction
     : XA xaStart = (START | BEGIN) xid xaAction = (JOIN | RESUME)?
     ;
@@ -1447,7 +1426,6 @@ xaRecoverWork
     ;
 
 // Prepared Statements
-
 prepareStatement
     : PREPARE uid FROM (query = STRING_LITERAL | variable = LOCAL_ID)
     ;
@@ -1461,14 +1439,12 @@ deallocatePrepare
     ;
 
 // Compound Statements
-
 routineBody
     : blockStatement
     | sqlStatement
     ;
 
 // details
-
 blockStatement
     : (uid ':')? BEGIN (
         (declareVariable SEMI)* (declareCondition SEMI)* (declareCursor SEMI)* (
@@ -1518,7 +1494,6 @@ cursorStatement
     ;
 
 // details
-
 declareVariable
     : DECLARE uidList dataType (DEFAULT expression)?
     ;
@@ -1560,7 +1535,6 @@ elifAlternative
 
 // Administration Statements
 //    Account management statements
-
 alterUser
     : ALTER USER userSpecification (',' userSpecification)* # alterUserMysqlV56
     | ALTER USER ifExists? userAuthOption (',' userAuthOption)* (
@@ -1634,7 +1608,6 @@ setPasswordStatement
     ;
 
 // details
-
 userSpecification
     : userName userPasswordOption
     ;
@@ -1783,7 +1756,6 @@ renameUserClause
     ;
 
 //    Table maintenance statements
-
 analyzeTable
     : ANALYZE actionOption = (NO_WRITE_TO_BINLOG | LOCAL)? (TABLE | TABLES) tables (
         UPDATE HISTOGRAM ON fullColumnName (',' fullColumnName)* (WITH decimalLiteral BUCKETS)?
@@ -1807,7 +1779,6 @@ repairTable
     ;
 
 // details
-
 checkTableOption
     : FOR UPGRADE
     | QUICK
@@ -1818,7 +1789,6 @@ checkTableOption
     ;
 
 //    Plugin and udf statements
-
 createUdfunction
     : CREATE orReplace? AGGREGATE? FUNCTION ifNotExists? uid // here orReplace is MariaDB-specific only
     RETURNS returnType = (STRING | INTEGER | REAL | DECIMAL) SONAME STRING_LITERAL
@@ -1833,7 +1803,6 @@ uninstallPlugin
     ;
 
 //    Set and show statements
-
 setStatement
     : SET variableClause ('=' | ':=') (expression | ON) (
         ',' variableClause ('=' | ':=') (expression | ON)
@@ -1888,7 +1857,6 @@ explainStatement
     ;
 
 // details
-
 variableClause
     : LOCAL_ID
     | GLOBAL_ID
@@ -1948,7 +1916,6 @@ showProfileType
     ;
 
 //    Other administrative statements
-
 binlogStatement
     : BINLOG STRING_LITERAL
     ;
@@ -1981,7 +1948,6 @@ shutdownStatement
     ;
 
 // details
-
 tableIndexes
     : tableName (indexFormat = (INDEX | KEY)? '(' uidList ')')?
     ;
@@ -2014,7 +1980,6 @@ loadedTableIndexes
     ;
 
 // Utility Statements
-
 simpleDescribeStatement
     : command = (EXPLAIN | DESCRIBE | DESC) tableName (column = uid | pattern = STRING_LITERAL)?
     ;
@@ -2094,7 +2059,6 @@ diagnosticsConditionInformationName
     ;
 
 // details
-
 describeObjectClause
     : (selectStatement | deleteStatement | insertStatement | replaceStatement | updateStatement) # describeStatements
     | FOR CONNECTION uid                                                                         # describeConnection
@@ -2102,7 +2066,6 @@ describeObjectClause
 
 // Common Clauses
 //    DB Objects
-
 fullId
     : uid (DOT_ID | '.' uid)?
     ;
@@ -2234,7 +2197,6 @@ dottedId
     ;
 
 //    Literals
-
 decimalLiteral
     : DECIMAL_LITERAL
     | ZERO_DECIMAL
@@ -2278,7 +2240,6 @@ constant
     ;
 
 //    Data Types
-
 dataType
     : typeName = (
         CHAR
@@ -2367,7 +2328,6 @@ lengthTwoOptionalDimension
     ;
 
 //    Common Lists
-
 uidList
     : uid (',' uid)*
     ;
@@ -2401,7 +2361,6 @@ userVariables
     ;
 
 //    Common Expressons
-
 defaultValue
     : NULL_LITERAL
     | CAST '(' expression AS convertedDataType ')'
@@ -2450,7 +2409,6 @@ lockOption
     ;
 
 //    Functions
-
 functionCall
     : specificFunction                         # specificFunctionCall
     | aggregateWindowedFunction                # aggregateFunctionCall
@@ -2525,134 +2483,133 @@ aggregateWindowedFunction
     ) ')' overClause?
     | (
         BIT_AND
-                | BIT_OR
-                | BIT_XOR
-                | STD
-                | STDDEV
-                | STDDEV_POP
-                | STDDEV_SAMP
-                | VAR_POP
-                | VAR_SAMP
-                | VARIANCE
-            ) '(' aggregator = ALL? functionArg ')' overClause?
-            | GROUP_CONCAT '(' aggregator = DISTINCT? functionArgs (
-                ORDER BY orderByExpression (',' orderByExpression)*
-            )? (SEPARATOR separator = STRING_LITERAL)? ')'
-            ;
+        | BIT_OR
+        | BIT_XOR
+        | STD
+        | STDDEV
+        | STDDEV_POP
+        | STDDEV_SAMP
+        | VAR_POP
+        | VAR_SAMP
+        | VARIANCE
+    ) '(' aggregator = ALL? functionArg ')' overClause?
+    | GROUP_CONCAT '(' aggregator = DISTINCT? functionArgs (
+        ORDER BY orderByExpression (',' orderByExpression)*
+    )? (SEPARATOR separator = STRING_LITERAL)? ')'
+    ;
 
-        nonAggregateWindowedFunction
-            : (LAG | LEAD) '(' expression (',' decimalLiteral)? (',' decimalLiteral)? ')' overClause
-            | (FIRST_VALUE | LAST_VALUE) '(' expression ')' overClause
-            | (CUME_DIST | DENSE_RANK | PERCENT_RANK | RANK | ROW_NUMBER) '(' ')' overClause
-            | NTH_VALUE '(' expression ',' decimalLiteral ')' overClause
-            | NTILE '(' decimalLiteral ')' overClause
-            ;
+nonAggregateWindowedFunction
+    : (LAG | LEAD) '(' expression (',' decimalLiteral)? (',' decimalLiteral)? ')' overClause
+    | (FIRST_VALUE | LAST_VALUE) '(' expression ')' overClause
+    | (CUME_DIST | DENSE_RANK | PERCENT_RANK | RANK | ROW_NUMBER) '(' ')' overClause
+    | NTH_VALUE '(' expression ',' decimalLiteral ')' overClause
+    | NTILE '(' decimalLiteral ')' overClause
+    ;
 
-        overClause
-            : OVER ('(' windowSpec? ')' | windowName)
-            ;
+overClause
+    : OVER ('(' windowSpec? ')' | windowName)
+    ;
 
-        windowSpec
-            : windowName? partitionClause? orderByClause? frameClause?
-            ;
+windowSpec
+    : windowName? partitionClause? orderByClause? frameClause?
+    ;
 
-        windowName
-            : uid
-            ;
+windowName
+    : uid
+    ;
 
-        frameClause
-            : frameUnits frameExtent
-            ;
+frameClause
+    : frameUnits frameExtent
+    ;
 
-        frameUnits
-            : ROWS
-            | RANGE
-            ;
+frameUnits
+    : ROWS
+    | RANGE
+    ;
 
-        frameExtent
-            : frameRange
-            | frameBetween
-            ;
+frameExtent
+    : frameRange
+    | frameBetween
+    ;
 
-        frameBetween
-            : BETWEEN frameRange AND frameRange
-            ;
+frameBetween
+    : BETWEEN frameRange AND frameRange
+    ;
 
-        frameRange
-            : CURRENT ROW
-            | UNBOUNDED (PRECEDING | FOLLOWING)
-            | expression (PRECEDING | FOLLOWING)
-            ;
+frameRange
+    : CURRENT ROW
+    | UNBOUNDED (PRECEDING | FOLLOWING)
+    | expression (PRECEDING | FOLLOWING)
+    ;
 
-        partitionClause
-            : PARTITION BY expression (',' expression)*
-            ;
+partitionClause
+    : PARTITION BY expression (',' expression)*
+    ;
 
-        scalarFunctionName
-            : functionNameBase
-            | ASCII
-            | CURDATE
-            | CURRENT_DATE
-            | CURRENT_TIME
-            | CURRENT_TIMESTAMP
-            | CURTIME
-            | DATE_ADD
-            | DATE_SUB
-            | IF
-            | INSERT
-            | LOCALTIME
-            | LOCALTIMESTAMP
-            | MID
-            | NOW
-            | REPLACE
-            | SUBSTR
-            | SUBSTRING
-            | SYSDATE
-            | TRIM
-            | UTC_DATE
-            | UTC_TIME
-            | UTC_TIMESTAMP
-            ;
+scalarFunctionName
+    : functionNameBase
+    | ASCII
+    | CURDATE
+    | CURRENT_DATE
+    | CURRENT_TIME
+    | CURRENT_TIMESTAMP
+    | CURTIME
+    | DATE_ADD
+    | DATE_SUB
+    | IF
+    | INSERT
+    | LOCALTIME
+    | LOCALTIMESTAMP
+    | MID
+    | NOW
+    | REPLACE
+    | SUBSTR
+    | SUBSTRING
+    | SYSDATE
+    | TRIM
+    | UTC_DATE
+    | UTC_TIME
+    | UTC_TIMESTAMP
+    ;
 
-        passwordFunctionClause
-            : functionName = (PASSWORD | OLD_PASSWORD) '(' functionArg ')'
-            ;
+passwordFunctionClause
+    : functionName = (PASSWORD | OLD_PASSWORD) '(' functionArg ')'
+    ;
 
-        functionArgs
-            : (constant | fullColumnName | functionCall | expression) (
-                ',' (constant | fullColumnName | functionCall | expression)
-            )*
-            ;
+functionArgs
+    : (constant | fullColumnName | functionCall | expression) (
+        ',' (constant | fullColumnName | functionCall | expression)
+    )*
+    ;
 
-        functionArg
-            : constant
-            | fullColumnName
-            | functionCall
-            | expression
-            ;
+functionArg
+    : constant
+    | fullColumnName
+    | functionCall
+    | expression
+    ;
 
-        //    Expressions, predicates
+//    Expressions, predicates
+// Simplified approach for expression
+expression
+    : notOperator = (NOT | '!') expression                   # notExpression
+    | expression logicalOperator expression                  # logicalExpression
+    | predicate IS NOT? testValue = (TRUE | FALSE | UNKNOWN) # isExpression
+    | predicate                                              # predicateExpression
+    ;
 
-        // Simplified approach for expression
-        expression
-            : notOperator = (NOT | '!') expression                   # notExpression
-            | expression logicalOperator expression                  # logicalExpression
-            | predicate IS NOT? testValue = (TRUE | FALSE | UNKNOWN) # isExpression
-            | predicate                                              # predicateExpression
-            ;
-
-        predicate
-            : predicate NOT? IN '(' (selectStatement | expressions) ')'                            # inPredicate
-            | predicate IS nullNotnull                                                             # isNullPredicate
-            | left = predicate comparisonOperator right = predicate                                # binaryComparisonPredicate
-            | predicate comparisonOperator quantifier = (ALL | ANY | SOME) '(' selectStatement ')' # subqueryComparisonPredicate
-            | predicate NOT? BETWEEN predicate AND predicate                                       # betweenPredicate
-            | predicate SOUNDS LIKE predicate                                                      # soundsLikePredicate
-            | predicate NOT? LIKE predicate (ESCAPE STRING_LITERAL)?                               # likePredicate
-            | predicate NOT? regex = (REGEXP | RLIKE) predicate                                    # regexpPredicate
-            | predicate MEMBER OF '(' predicate ')'                                                # jsonMemberOfPredicate
-            | expressionAtom                                                                       # expressionAtomPredicate
-            ;
+predicate
+    : predicate NOT? IN '(' (selectStatement | expressions) ')'                            # inPredicate
+    | predicate IS nullNotnull                                                             # isNullPredicate
+    | left = predicate comparisonOperator right = predicate                                # binaryComparisonPredicate
+    | predicate comparisonOperator quantifier = (ALL | ANY | SOME) '(' selectStatement ')' # subqueryComparisonPredicate
+    | predicate NOT? BETWEEN predicate AND predicate                                       # betweenPredicate
+    | predicate SOUNDS LIKE predicate                                                      # soundsLikePredicate
+    | predicate NOT? LIKE predicate (ESCAPE STRING_LITERAL)?                               # likePredicate
+    | predicate NOT? regex = (REGEXP | RLIKE) predicate                                    # regexpPredicate
+    | predicate MEMBER OF '(' predicate ')'                                                # jsonMemberOfPredicate
+    | expressionAtom                                                                       # expressionAtomPredicate
+    ;
 
         // Add in ASTVisitor nullNotnull in constant
         expressionAtom
@@ -3637,3 +3594,12 @@ aggregateWindowedFunction
             | NEXTVAL
             | SETVAL
             ;
+// Special rule to handle stored procedure statements with custom delimiters
+storedProcedureStatement
+    : CREATE orReplace? ownerStatement?
+      PROCEDURE fullId '(' procedureParameter? (',' procedureParameter)* ')'
+      routineOption*
+      BEGIN
+        procedureSqlStatement*
+      END delimiterIdentifier?
+    ;
